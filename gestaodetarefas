@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gestão Jurídica — Kanban</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --blue: #2563eb;
+      --green: #059669;
+      --amber: #d97706;
+      --red: #dc2626;
+      --purple: #7c3aed;
+      --gray: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      height: 72px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      gap: 16px;
+    }
+
+    .brand h1 {
+      font-size: 20px;
+      color: var(--blue);
+      margin-bottom: 3px;
+    }
+
+    .brand p {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .search {
+      width: 420px;
+      max-width: 40vw;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--red);
+    }
+
+    .btn-small {
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .layout {
+      height: calc(100vh - 72px);
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      overflow: hidden;
+    }
+
+    aside {
+      background: #fff;
+      border-right: 1px solid var(--border);
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    main {
+      padding: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .panel-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 12px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .metric {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .metric span {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      outline: none;
+      font-size: 14px;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      gap: 12px;
+    }
+
+    .board-title h2 {
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .board-title p {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .board {
+      flex: 1;
+      overflow-x: auto;
+      overflow-y: hidden;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(270px, 1fr));
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .column {
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .column-header {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+    }
+
+    .column-header h3 {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .count {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .dropzone {
+      flex: 1;
+      min-height: 140px;
+      overflow-y: auto;
+      padding: 12px;
+    }
+
+    .dropzone.drag-over {
+      background: rgba(37, 99, 235, .08);
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 10px;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+      cursor: grab;
+    }
+
+    .card:hover {
+      border-color: #cbd5e1;
+    }
+
+    .card h4 {
+      font-size: 14px;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .code {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .description {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+      margin: 8px 0;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 8px 0;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 4px 7px;
+      display: inline-block;
+    }
+
+    .badge-demanda {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .badge-tarefa {
+      background: #ede9fe;
+      color: #6d28d9;
+    }
+
+    .badge-baixa {
+      background: #dcfce7;
+      color: #047857;
+    }
+
+    .badge-media {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .badge-alta,
+    .badge-critico {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .meta {
+      font-size: 12px;
+      color: var(--muted);
+      display: grid;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .overdue {
+      color: var(--red);
+      font-weight: 800;
+    }
+
+    .due-soon {
+      color: var(--amber);
+      font-weight: 800;
+    }
+
+    .card-footer {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 24px 8px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, .6);
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      width: 760px;
+      max-width: 96vw;
+      max-height: 92vh;
+      overflow-y: auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 30px 90px rgba(15, 23, 42, .3);
+    }
+
+    .modal-header,
+    .modal-footer {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-footer {
+      border-top: 1px solid var(--border);
+      border-bottom: none;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .modal-body {
+      padding: 20px 22px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .modal-close {
+      width: 34px;
+      height: 34px;
+      border: none;
+      border-radius: 10px;
+      background: #f1f5f9;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .checkline {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 0;
+      font-size: 13px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #111827;
+      color: #fff;
+      padding: 13px 15px;
+      border-radius: 12px;
+      font-size: 13px;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: .25s;
+      z-index: 2000;
+      max-width: 420px;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 1000px) {
+      body {
+        overflow: auto;
+      }
+
+      header {
+        height: auto;
+        flex-wrap: wrap;
+        padding: 16px;
+      }
+
+      .search {
+        width: 100%;
+        max-width: none;
+      }
+
+      .layout {
+        height: auto;
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        display: none;
+      }
+
+      main {
+        min-height: calc(100vh - 120px);
+      }
+
+      .board {
+        grid-template-columns: repeat(5, 280px);
+      }
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="brand">
+      <h1>Gestão Jurídica</h1>
+      <p>Kanban de demandas, tarefas, prazos e responsáveis</p>
+    </div>
+
+    <input
+      id="searchInput"
+      class="search"
+      placeholder="Buscar por título, processo, parte, responsável ou descrição..."
+      oninput="renderAll()"
+    />
+
+    <div class="top-actions">
+      <button class="btn btn-secondary" onclick="openModal('configModal')">Config Supabase</button>
+      <button class="btn btn-secondary" onclick="openModal('responsavelModal')">+ Responsável</button>
+      <button class="btn btn-primary" onclick="newDemanda()">+ Nova demanda/tarefa</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="panel">
+        <div class="panel-title">Indicadores</div>
+        <div class="metric-grid">
+          <div class="metric">
+            <strong id="metricTotal">0</strong>
+            <span>Total</span>
+          </div>
+          <div class="metric">
+            <strong id="metricPrazo">0</strong>
+            <span>Vencidas/hoje</span>
+          </div>
+          <div class="metric">
+            <strong id="metricCritico">0</strong>
+            <span>Alto/crítico</span>
+          </div>
+          <div class="metric">
+            <strong id="metricConcluido">0</strong>
+            <span>Concluídas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Filtros</div>
+
+        <div class="field">
+          <label>Tipo</label>
+          <select id="filterTipo" onchange="renderAll()">
+            <option value="">Todos</option>
+            <option value="demanda">Demandas jurídicas</option>
+            <option value="tarefa">Tarefas</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Área jurídica</label>
+          <select id="filterArea" onchange="renderAll()">
+            <option value="">Todas</option>
+            <option value="contratos">Contratos</option>
+            <option value="trabalhista">Trabalhista</option>
+            <option value="civel">Cível</option>
+            <option value="tributario">Tributário</option>
+            <option value="societario">Societário</option>
+            <option value="compliance">Compliance</option>
+            <option value="lgpd">LGPD</option>
+            <option value="administrativo">Administrativo</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Risco</label>
+          <select id="filterRisco" onchange="renderAll()">
+            <option value="">Todos</option>
+            <option value="baixo">Baixo</option>
+            <option value="medio">Médio</option>
+            <option value="alto">Alto</option>
+            <option value="critico">Crítico</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Responsável</label>
+          <select id="filterResponsavel" onchange="renderAll()">
+            <option value="">Todos</option>
+          </select>
+        </div>
+
+        <button class="btn btn-secondary" style="width:100%" onclick="clearFilters()">Limpar filtros</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Próximos prazos</div>
+        <div id="upcomingList"></div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="board-header">
+        <div class="board-title">
+          <h2>Quadro jurídico</h2>
+          <p>Arraste os cartões entre colunas para atualizar o status.</p>
+        </div>
+      </div>
+
+      <section class="board" id="board"></section>
+    </main>
+  </div>
+
+  <!-- CONFIG MODAL -->
+  <div class="modal-overlay" id="configModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Configuração Supabase</div>
+        <button class="modal-close" onclick="closeModal('configModal')">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field">
+          <label>Supabase URL</label>
+          <input id="supabaseUrl" placeholder="https://xxxxx.supabase.co" />
+        </div>
+
+        <div class="field">
+          <label>Supabase anon public key</label>
+          <textarea id="supabaseKey" placeholder="eyJhbGciOi..."></textarea>
+        </div>
+
+        <p style="font-size:13px;color:var(--muted);line-height:1.5">
+          Para teste, as chaves ficam salvas no navegador via localStorage.
+          Em produção, configure autenticação e políticas RLS por usuário.
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('configModal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveConfig()">Salvar e recarregar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESPONSAVEL MODAL -->
+  <div class="modal-overlay" id="responsavelModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Responsável</div>
+        <button class="modal-close" onclick="closeModal('responsavelModal')">×</button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="responsavelId" />
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Nome *</label>
+            <input id="responsavelNome" placeholder="Nome do responsável" />
+          </div>
+
+          <div class="field">
+            <label>E-mail</label>
+            <input id="responsavelEmail" placeholder="email@empresa.com" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Cargo/Função</label>
+            <input id="responsavelCargo" placeholder="Advogado, analista, gestor..." />
+          </div>
+
+          <div class="field">
+            <label>Cor</label>
+            <input id="responsavelCor" value="#2563eb" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('responsavelModal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveResponsavel()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMANDA MODAL -->
+  <div class="modal-overlay" id="demandaModal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="demandaModalTitle">Nova demanda/tarefa</div>
+        <button class="modal-close" onclick="closeModal('demandaModal')">×</button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="demandaId" />
+
+        <div class="grid-3">
+          <div class="field">
+            <label>Tipo *</label>
+            <select id="tipoRegistro">
+              <option value="demanda">Demanda jurídica</option>
+              <option value="tarefa">Tarefa</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Status *</label>
+            <select id="status">
+              <option value="triagem">Triagem</option>
+              <option value="em_analise">Em análise</option>
+              <option value="em_execucao">Em execução</option>
+              <option value="aguardando">Aguardando terceiro</option>
+              <option value="concluido">Concluído</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Prioridade *</label>
+            <select id="prioridade">
+              <option value="baixa">Baixa</option>
+              <option value="media" selected>Média</option>
+              <option value="alta">Alta</option>
+              <option value="critico">Crítica</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Título *</label>
+          <input id="titulo" placeholder="Ex: Revisar contrato / Protocolar defesa" />
+        </div>
+
+        <div class="field">
+          <label>Descrição</label>
+          <textarea id="descricao" placeholder="Contexto, providências, próximos passos..."></textarea>
+        </div>
+
+        <div class="grid-3">
+          <div class="field">
+            <label>Área jurídica</label>
+            <select id="areaJuridica">
+              <option value="contratos">Contratos</option>
+              <option value="trabalhista">Trabalhista</option>
+              <option value="civel">Cível</option>
+              <option value="tributario">Tributário</option>
+              <option value="societario">Societário</option>
+              <option value="compliance">Compliance</option>
+              <option value="lgpd">LGPD</option>
+              <option value="administrativo">Administrativo</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Risco jurídico</label>
+            <select id="risco">
+              <option value="baixo">Baixo</option>
+              <option value="medio" selected>Médio</option>
+              <option value="alto">Alto</option>
+              <option value="critico">Crítico</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Responsável</label>
+            <select id="responsavelSelect">
+              <option value="">Sem responsável</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="field">
+            <label>Prazo</label>
+            <input type="date" id="prazo" />
+          </div>
+
+          <div class="field">
+            <label>Número do processo</label>
+            <input id="numeroProcesso" placeholder="0000000-00.0000.0.00.0000" />
+          </div>
+
+          <div class="field">
+            <label>Valor envolvido</label>
+            <input type="number" step="0.01" id="valorEnvolvido" placeholder="0,00" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label>Parte contrária / interessado</label>
+            <input id="parteContraria" placeholder="Parte, cliente, fornecedor..." />
+          </div>
+
+          <div class="field">
+            <label>Link documento/pasta</label>
+            <input id="linkDocumento" placeholder="https://..." />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Checklist de tarefas</label>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px">
+            <input id="checkInput" placeholder="Ex: Revisar minuta, coletar procuração..." />
+            <button type="button" class="btn btn-primary" onclick="addChecklistItem()">Adicionar</button>
+          </div>
+          <div id="checklistBox"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="deleteBtn" style="margin-right:auto;display:none" onclick="deleteDemanda()">Excluir</button>
+        <button class="btn btn-secondary" onclick="closeModal('demandaModal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveDemanda()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STATUSES = [
+      { id: "triagem", label: "Triagem", color: "#64748b" },
+      { id: "em_analise", label: "Em análise", color: "#2563eb" },
+      { id: "em_execucao", label: "Em execução", color: "#d97706" },
+      { id: "aguardando", label: "Aguardando terceiro", color: "#7c3aed" },
+      { id: "concluido", label: "Concluído", color: "#059669" }
+    ];
+
+    let supabaseClient = null;
+    let demandas = [];
+    let responsaveis = [];
+    let checklistAtual = [];
+    let draggedId = null;
+
+    const config = {
+      url: localStorage.getItem("JUR_SUPABASE_URL") || "",
+      key: localStorage.getItem("JUR_SUPABASE_KEY") || ""
+    };
+
+    document.addEventListener("DOMContentLoaded", init);
+
+    async function init() {
+      document.getElementById("supabaseUrl").value = config.url;
+      document.getElementById("supabaseKey").value = config.key;
+
+      if (!config.url || !config.key) {
+        seedDemo();
+        renderAll();
+        openModal("configModal");
+        toast("Configure o Supabase para salvar os dados reais.");
+        return;
+      }
+
+      supabaseClient = supabase.createClient(config.url, config.key);
+
+      await loadData();
+      initRealtime();
+      renderAll();
+    }
+
+    async function loadData() {
+      const [respRes, demRes] = await Promise.all([
+        supabaseClient.from("jur_responsaveis").select("*").order("nome"),
+        supabaseClient.from("jur_demandas").select("*").order("created_at", { ascending: false })
+      ]);
+
+      if (respRes.error) {
+        toast(respRes.error.message);
+        return;
+      }
+
+      if (demRes.error) {
+        toast(demRes.error.message);
+        return;
+      }
+
+      responsaveis = respRes.data || [];
+      demandas = demRes.data || [];
+    }
+
+    function initRealtime() {
+      supabaseClient
+        .channel("juridico-kanban")
+        .on("postgres_changes", { event: "*", schema: "public", table: "jur_responsaveis" }, refresh)
+        .on("postgres_changes", { event: "*", schema: "public", table: "jur_demandas" }, refresh)
+        .subscribe();
+    }
+
+    async function refresh() {
+      await loadData();
+      renderAll();
+    }
+
+    function seedDemo() {
+      responsaveis = [
+        {
+          id: "resp-demo-1",
+          nome: "Marina Costa",
+          email: "marina@empresa.com",
+          cargo: "Jurídico",
+          cor: "#2563eb"
+        },
+        {
+          id: "resp-demo-2",
+          nome: "Rafael Lima",
+          email: "rafael@empresa.com",
+          cargo: "Contratos",
+          cor: "#7c3aed"
+        }
+      ];
+
+      const hoje = new Date();
+      const d1 = addDays(hoje, 2);
+      const d2 = addDays(hoje, -1);
+      const d3 = addDays(hoje, 8);
+
+      demandas = [
+        {
+          id: "demanda-demo-1",
+          codigo: "JUR-DEMO-001",
+          tipo_registro: "demanda",
+          titulo: "Revisar contrato de prestação de serviços",
+          descricao: "Analisar SLA, multa, reajuste, confidencialidade e rescisão.",
+          area_juridica: "contratos",
+          risco: "medio",
+          prioridade: "alta",
+          status: "em_analise",
+          responsavel_id: "resp-demo-2",
+          prazo: toISODate(d1),
+          numero_processo: "",
+          parte_contraria: "Fornecedor XPTO",
+          valor_envolvido: 85000,
+          link_documento: "",
+          checklist: [
+            { text: "Ler minuta", done: true },
+            { text: "Marcar pontos de risco", done: false }
+          ]
+        },
+        {
+          id: "demanda-demo-2",
+          codigo: "JUR-DEMO-002",
+          tipo_registro: "tarefa",
+          titulo: "Protocolar manifestação trabalhista",
+          descricao: "Conferir documentos e protocolar peça no sistema do tribunal.",
+          area_juridica: "trabalhista",
+          risco: "alto",
+          prioridade: "critico",
+          status: "em_execucao",
+          responsavel_id: "resp-demo-1",
+          prazo: toISODate(d2),
+          numero_processo: "0001234-56.2024.5.02.0001",
+          parte_contraria: "Ex-colaborador",
+          valor_envolvido: 42000,
+          link_documento: "",
+          checklist: [
+            { text: "Conferir procuração", done: true },
+            { text: "Protocolar peça", done: false }
+          ]
+        },
+        {
+          id: "demanda-demo-3",
+          codigo: "JUR-DEMO-003",
+          tipo_registro: "demanda",
+          titulo: "Mapear bases legais de tratamento de dados",
+          descricao: "Atividade de LGPD para atualização de inventário.",
+          area_juridica: "lgpd",
+          risco: "baixo",
+          prioridade: "media",
+          status: "triagem",
+          responsavel_id: "",
+          prazo: toISODate(d3),
+          numero_processo: "",
+          parte_contraria: "Interno",
+          valor_envolvido: 0,
+          link_documento: "",
+          checklist: []
+        }
+      ];
+    }
+
+    function renderAll() {
+      updateResponsavelSelects();
+      renderBoard();
+      renderMetrics();
+      renderUpcoming();
+    }
+
+    function getFilteredDemandas() {
+      const search = getValue("searchInput").toLowerCase();
+      const tipo = getValue("filterTipo");
+      const area = getValue("filterArea");
+      const risco = getValue("filterRisco");
+      const responsavel = getValue("filterResponsavel");
+
+      return demandas.filter((d) => {
+        const resp = getResponsavel(d.responsavel_id);
+
+        const text = [
+          d.codigo,
+          d.titulo,
+          d.descricao,
+          d.area_juridica,
+          d.risco,
+          d.prioridade,
+          d.numero_processo,
+          d.parte_contraria,
+          resp?.nome,
+          resp?.email
+        ].join(" ").toLowerCase();
+
+        return (!search || text.includes(search)) &&
+          (!tipo || d.tipo_registro === tipo) &&
+          (!area || d.area_juridica === area) &&
+          (!risco || d.risco === risco) &&
+          (!responsavel || d.responsavel_id === responsavel);
+      });
+    }
+
+    function renderBoard() {
+      const board = document.getElementById("board");
+      const filtered = getFilteredDemandas();
+
+      board.innerHTML = STATUSES.map((status) => {
+        const cards = filtered.filter((d) => d.status === status.id);
+
+        return `
+          <div class="column">
+            <div class="column-header">
+              <h3>
+                <span class="dot" style="background:${status.color}"></span>
+                ${status.label}
+              </h3>
+              <span class="count">${cards.length}</span>
+            </div>
+
+            <div
+              class="dropzone"
+              data-status="${status.id}"
+              ondragover="allowDrop(event)"
+              ondragleave="leaveDrop(event)"
+              ondrop="dropCard(event)"
+            >
+              ${cards.length ? cards.map(renderCard).join("") : `<div class="empty">Nenhum item nesta etapa.</div>`}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderCard(d) {
+      const resp = getResponsavel(d.responsavel_id);
+      const checklist = Array.isArray(d.checklist) ? d.checklist : [];
+      const done = checklist.filter((c) => c.done).length;
+      const prazoClass = getPrazoClass(d.prazo);
+
+      return `
+        <article class="card" draggable="true" ondragstart="dragCard(event, '${d.id}')" ondblclick="editDemanda('${d.id}')">
+          <h4>${escapeHtml(d.titulo)}</h4>
+          <div class="code">${escapeHtml(d.codigo || d.id)}</div>
+
+          <div class="badges">
+            <span class="badge badge-${d.tipo_registro}">
+              ${d.tipo_registro === "tarefa" ? "Tarefa" : "Demanda"}
+            </span>
+
+            <span class="badge badge-${d.prioridade}">
+              ${labelPrioridade(d.prioridade)}
+            </span>
+
+            <span class="badge badge-${d.risco}">
+              Risco ${labelRisco(d.risco)}
+            </span>
+          </div>
+
+          <div class="description">
+            ${escapeHtml(d.descricao || "Sem descrição.")}
+          </div>
+
+          <div class="meta">
+            <div>⚖ ${labelArea(d.area_juridica)}</div>
+            <div class="${prazoClass}">⏱ ${formatDate(d.prazo) || "Sem prazo"}</div>
+            ${d.numero_processo ? `<div># ${escapeHtml(d.numero_processo)}</div>` : ""}
+            ${checklist.length ? `<div>☑ Checklist: ${done}/${checklist.length}</div>` : ""}
+            ${d.valor_envolvido ? `<div>💰 ${formatMoney(d.valor_envolvido)}</div>` : ""}
+          </div>
+
+          <div class="card-footer">
+            <div style="font-size:12px;color:var(--muted);font-weight:700">
+              ${escapeHtml(resp?.nome || "Sem responsável")}
+            </div>
+
+            <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); editDemanda('${d.id}')">
+              Editar
+            </button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderMetrics() {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const vencidas = demandas.filter((d) => {
+        if (!d.prazo || d.status === "concluido") return false;
+        const date = new Date(d.prazo + "T00:00:00");
+        return date <= today;
+      }).length;
+
+      document.getElementById("metricTotal").textContent = demandas.length;
+      document.getElementById("metricPrazo").textContent = vencidas;
+      document.getElementById("metricCritico").textContent = demandas.filter((d) => ["alto", "critico"].includes(d.risco)).length;
+      document.getElementById("metricConcluido").textContent = demandas.filter((d) => d.status === "concluido").length;
+    }
+
+    function renderUpcoming() {
+      const el = document.getElementById("upcomingList");
+
+      const upcoming = demandas
+        .filter((d) => d.prazo && d.status !== "concluido")
+        .sort((a, b) => new Date(a.prazo) - new Date(b.prazo))
+        .slice(0, 6);
+
+      if (!upcoming.length) {
+        el.innerHTML = `<div class="empty">Sem prazos cadastrados.</div>`;
+        return;
+      }
+
+      el.innerHTML = upcoming.map((d) => `
+        <div style="padding:9px 0;border-bottom:1px solid var(--border)">
+          <strong style="font-size:13px">${escapeHtml(d.titulo)}</strong>
+          <div style="font-size:12px;margin-top:4px" class="${getPrazoClass(d.prazo)}">
+            ${formatDate(d.prazo)} · ${labelArea(d.area_juridica)}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function updateResponsavelSelects() {
+      const options = responsaveis.map((r) => `<option value="${r.id}">${escapeHtml(r.nome)}</option>`).join("");
+
+      document.getElementById("responsavelSelect").innerHTML =
+        `<option value="">Sem responsável</option>${options}`;
+
+      document.getElementById("filterResponsavel").innerHTML =
+        `<option value="">Todos</option>${options}`;
+    }
+
+    function newDemanda() {
+      clearDemandaForm();
+      document.getElementById("demandaModalTitle").textContent = "Nova demanda/tarefa";
+      document.getElementById("deleteBtn").style.display = "none";
+      openModal("demandaModal");
+    }
+
+    function editDemanda(id) {
+      const d = demandas.find((x) => x.id === id);
+      if (!d) return;
+
+      setValue("demandaId", d.id);
+      setValue("tipoRegistro", d.tipo_registro);
+      setValue("status", d.status);
+      setValue("prioridade", d.prioridade);
+      setValue("titulo", d.titulo);
+      setValue("descricao", d.descricao);
+      setValue("areaJuridica", d.area_juridica);
+      setValue("risco", d.risco);
+      setValue("responsavelSelect", d.responsavel_id || "");
+      setValue("prazo", d.prazo || "");
+      setValue("numeroProcesso", d.numero_processo || "");
+      setValue("valorEnvolvido", d.valor_envolvido || "");
+      setValue("parteContraria", d.parte_contraria || "");
+      setValue("linkDocumento", d.link_documento || "");
+
+      checklistAtual = Array.isArray(d.checklist) ? [...d.checklist] : [];
+
+      document.getElementById("demandaModalTitle").textContent = "Editar demanda/tarefa";
+      document.getElementById("deleteBtn").style.display = "inline-flex";
+
+      renderChecklist();
+      openModal("demandaModal");
+    }
+
+    async function saveDemanda() {
+      const id = getValue("demandaId");
+
+      const payload = {
+        tipo_registro: getValue("tipoRegistro"),
+        status: getValue("status"),
+        prioridade: getValue("prioridade"),
+        titulo: getValue("titulo"),
+        descricao: getValue("descricao"),
+        area_juridica: getValue("areaJuridica"),
+        risco: getValue("risco"),
+        responsavel_id: getValue("responsavelSelect") || null,
+        prazo: getValue("prazo") || null,
+        numero_processo: getValue("numeroProcesso"),
+        parte_contraria: getValue("parteContraria"),
+        valor_envolvido: getValue("valorEnvolvido") ? Number(getValue("valorEnvolvido")) : null,
+        link_documento: getValue("linkDocumento"),
+        checklist: checklistAtual
+      };
+
+      if (!payload.titulo) {
+        toast("Informe o título.");
+        return;
+      }
+
+      if (!supabaseClient) {
+        if (id) {
+          const index = demandas.findIndex((d) => d.id === id);
+          demandas[index] = { ...demandas[index], ...payload };
+        } else {
+          demandas.unshift({
+            id: "local-" + Date.now(),
+            codigo: nextLocalCode(),
+            ...payload
+          });
+        }
+
+        closeModal("demandaModal");
+        renderAll();
+        toast("Salvo localmente. Configure o Supabase para persistir.");
+        return;
+      }
+
+      if (id) {
+        const { error } = await supabaseClient
+          .from("jur_demandas")
+          .update(payload)
+          .eq("id", id);
+
+        if (error) {
+          toast(error.message);
+          return;
+        }
+      } else {
+        payload.codigo = await nextCode();
+
+        const { error } = await supabaseClient
+          .from("jur_demandas")
+          .insert(payload);
+
+        if (error) {
+          toast(error.message);
+          return;
+        }
+      }
+
+      closeModal("demandaModal");
+      clearDemandaForm();
+      await refresh();
+      toast("Registro salvo.");
+    }
+
+    async function deleteDemanda() {
+      const id = getValue("demandaId");
+      if (!id) return;
+
+      if (!confirm("Deseja excluir este registro?")) return;
+
+      if (!supabaseClient) {
+        demandas = demandas.filter((d) => d.id !== id);
+        closeModal("demandaModal");
+        renderAll();
+        toast("Registro excluído localmente.");
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("jur_demandas")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        toast(error.message);
+        return;
+      }
+
+      closeModal("demandaModal");
+      await refresh();
+      toast("Registro excluído.");
+    }
+
+    async function saveResponsavel() {
+      const payload = {
+        nome: getValue("responsavelNome"),
+        email: getValue("responsavelEmail"),
+        cargo: getValue("responsavelCargo"),
+        cor: getValue("responsavelCor") || "#2563eb"
+      };
+
+      if (!payload.nome) {
+        toast("Informe o nome do responsável.");
+        return;
+      }
+
+      if (!supabaseClient) {
+        responsaveis.push({
+          id: "local-resp-" + Date.now(),
+          ...payload
+        });
+
+        closeModal("responsavelModal");
+        clearResponsavelForm();
+        renderAll();
+        toast("Responsável salvo localmente.");
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("jur_responsaveis")
+        .insert(payload);
+
+      if (error) {
+        toast(error.message);
+        return;
+      }
+
+      closeModal("responsavelModal");
+      clearResponsavelForm();
+      await refresh();
+      toast("Responsável salvo.");
+    }
+
+    function addChecklistItem() {
+      const text = getValue("checkInput");
+      if (!text) return;
+
+      checklistAtual.push({
+        text,
+        done: false
+      });
+
+      setValue("checkInput", "");
+      renderChecklist();
+    }
+
+    function toggleChecklist(index) {
+      checklistAtual[index].done = !checklistAtual[index].done;
+      renderChecklist();
+    }
+
+    function removeChecklist(index) {
+      checklistAtual.splice(index, 1);
+      renderChecklist();
+    }
+
+    function renderChecklist() {
+      const box = document.getElementById("checklistBox");
+
+      if (!checklistAtual.length) {
+        box.innerHTML = `<div class="empty">Nenhuma tarefa no checklist.</div>`;
+        return;
+      }
+
+      box.innerHTML = checklistAtual.map((item, index) => `
+        <div class="checkline">
+          <input type="checkbox" ${item.done ? "checked" : ""} onchange="toggleChecklist(${index})" />
+          <span style="${item.done ? "text-decoration:line-through;color:var(--muted)" : ""}">
+            ${escapeHtml(item.text)}
+          </span>
+          <button class="btn btn-danger btn-small" type="button" onclick="removeChecklist(${index})">x</button>
+        </div>
+      `).join("");
+    }
+
+    function dragCard(event, id) {
+      draggedId = id;
+      event.dataTransfer.effectAllowed = "move";
+    }
+
+    function allowDrop(event) {
+      event.preventDefault();
+      event.currentTarget.classList.add("drag-over");
+    }
+
+    function leaveDrop(event) {
+      event.currentTarget.classList.remove("drag-over");
+    }
+
+    async function dropCard(event) {
+      event.preventDefault();
+      event.currentTarget.classList.remove("drag-over");
+
+      const status = event.currentTarget.dataset.status;
+      if (!draggedId || !status) return;
+
+      if (!supabaseClient) {
+        const item = demandas.find((d) => d.id === draggedId);
+        if (item) item.status = status;
+        renderAll();
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from("jur_demandas")
+        .update({ status })
+        .eq("id", draggedId);
+
+      if (error) {
+        toast(error.message);
+        return;
+      }
+
+      await refresh();
+      toast("Status atualizado.");
+    }
+
+    function saveConfig() {
+      localStorage.setItem("JUR_SUPABASE_URL", getValue("supabaseUrl"));
+      localStorage.setItem("JUR_SUPABASE_KEY", getValue("supabaseKey"));
+      location.reload();
+    }
+
+    function clearFilters() {
+      setValue("searchInput", "");
+      setValue("filterTipo", "");
+      setValue("filterArea", "");
+      setValue("filterRisco", "");
+      setValue("filterResponsavel", "");
+      renderAll();
+    }
+
+    function clearDemandaForm() {
+      [
+        "demandaId",
+        "titulo",
+        "descricao",
+        "prazo",
+        "numeroProcesso",
+        "valorEnvolvido",
+        "parteContraria",
+        "linkDocumento",
+        "checkInput"
+      ].forEach((id) => setValue(id, ""));
+
+      setValue("tipoRegistro", "demanda");
+      setValue("status", "triagem");
+      setValue("prioridade", "media");
+      setValue("areaJuridica", "contratos");
+      setValue("risco", "medio");
+      setValue("responsavelSelect", "");
+
+      checklistAtual = [];
+      renderChecklist();
+    }
+
+    function clearResponsavelForm() {
+      setValue("responsavelId", "");
+      setValue("responsavelNome", "");
+      setValue("responsavelEmail", "");
+      setValue("responsavelCargo", "");
+      setValue("responsavelCor", "#2563eb");
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("active");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("active");
+    }
+
+    document.querySelectorAll(".modal-overlay").forEach((modal) => {
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) modal.classList.remove("active");
+      });
+    });
+
+    async function nextCode() {
+      const year = new Date().getFullYear();
+      const count = demandas.filter((d) => String(d.codigo || "").includes(`JUR-${year}`)).length + 1;
+      return `JUR-${year}-${String(count).padStart(4, "0")}`;
+    }
+
+    function nextLocalCode() {
+      const year = new Date().getFullYear();
+      return `JUR-${year}-${String(demandas.length + 1).padStart(4, "0")}`;
+    }
+
+    function getResponsavel(id) {
+      return responsaveis.find((r) => r.id === id);
+    }
+
+    function getPrazoClass(date) {
+      if (!date) return "";
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const prazo = new Date(date + "T00:00:00");
+      const diff = Math.ceil((prazo - today) / 86400000);
+
+      if (diff < 0) return "overdue";
+      if (diff <= 2) return "due-soon";
+      return "";
+    }
+
+    function labelArea(value) {
+      return {
+        contratos: "Contratos",
+        trabalhista: "Trabalhista",
+        civel: "Cível",
+        tributario: "Tributário",
+        societario: "Societário",
+        compliance: "Compliance",
+        lgpd: "LGPD",
+        administrativo: "Administrativo"
+      }[value] || value || "—";
+    }
+
+    function labelPrioridade(value) {
+      return {
+        baixa: "Baixa",
+        media: "Média",
+        alta: "Alta",
+        critico: "Crítica"
+      }[value] || value || "—";
+    }
+
+    function labelRisco(value) {
+      return {
+        baixo: "Baixo",
+        medio: "Médio",
+        alto: "Alto",
+        critico: "Crítico"
+      }[value] || value || "—";
+    }
+
+    function formatDate(date) {
+      if (!date) return "";
+      const [year, month, day] = date.split("-");
+      return `${day}/${month}/${year}`;
+    }
+
+    function formatMoney(value) {
+      return Number(value || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    }
+
+    function addDays(date, days) {
+      const d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return d;
+    }
+
+    function toISODate(date) {
+      return date.toISOString().slice(0, 10);
+    }
+
+    function getValue(id) {
+      return document.getElementById(id)?.value?.trim() || "";
+    }
+
+    function setValue(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.value = value ?? "";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function toast(message) {
+      const el = document.getElementById("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 3200);
+    }
+  </script>
+</body>
+</html>
