@@ -3,59 +3,135 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gestão Jurídica — Kanban</title>
+
+  <title>LexBoard — Gestão Jurídica</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
-      --bg: #f4f7fb;
-      --card: #ffffff;
-      --text: #111827;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --blue: #2563eb;
-      --green: #059669;
-      --amber: #d97706;
-      --red: #dc2626;
-      --purple: #7c3aed;
-      --gray: #64748b;
+      --bg: #0d0f14;
+      --surface: #151821;
+      --surface2: #1c2030;
+      --surface3: #222840;
+      --border: #2a3050;
+      --border2: #363f60;
+      --text: #e8ecf8;
+      --text2: #8b95b8;
+      --text3: #556080;
+      --gold: #c9a227;
+      --gold2: #f0c84a;
+      --blue: #4a80f5;
+      --green: #2ecc87;
+      --amber: #f5a623;
+      --red: #f04040;
+      --purple: #9b6bff;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(0,0,0,.4);
     }
 
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
     }
 
     body {
       background: var(--bg);
       color: var(--text);
+      font-family: "DM Sans", sans-serif;
       min-height: 100vh;
       overflow: hidden;
     }
 
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 99px;
+    }
+
     header {
-      height: 72px;
-      background: #fff;
+      height: 68px;
+      background: var(--surface);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 24px;
-      gap: 16px;
+      padding: 0 22px;
+      gap: 14px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: fit-content;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
     }
 
     .brand h1 {
-      font-size: 20px;
-      color: var(--blue);
-      margin-bottom: 3px;
+      font-family: "Playfair Display", serif;
+      font-size: 22px;
+      color: var(--gold2);
+      line-height: 1;
     }
 
     .brand p {
-      font-size: 12px;
-      color: var(--muted);
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+
+    .search-wrap {
+      flex: 1;
+      max-width: 520px;
+      position: relative;
+    }
+
+    .search-wrap::before {
+      content: "⌕";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text3);
+      font-size: 18px;
+    }
+
+    .search {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px 10px 38px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+    }
+
+    .search:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--gold);
     }
 
     .top-actions {
@@ -64,81 +140,101 @@
       align-items: center;
     }
 
-    .search {
-      width: 420px;
-      max-width: 40vw;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      outline: none;
-    }
-
     .btn {
       border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
+      border-radius: 8px;
+      padding: 9px 14px;
       cursor: pointer;
-      font-weight: 700;
+      font-weight: 600;
       font-size: 13px;
+      font-family: "DM Sans", sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: .15s;
     }
 
     .btn-primary {
-      background: var(--blue);
-      color: #fff;
+      background: linear-gradient(135deg, var(--gold), var(--gold2));
+      color: #0d0f14;
+    }
+
+    .btn-primary:hover {
+      opacity: .9;
+      transform: translateY(-1px);
     }
 
     .btn-secondary {
-      background: #fff;
-      color: var(--text);
+      background: var(--surface2);
+      color: var(--text2);
       border: 1px solid var(--border);
     }
 
-    .btn-danger {
-      background: #fee2e2;
-      color: var(--red);
+    .btn-secondary:hover {
+      background: var(--surface3);
+      color: var(--text);
     }
 
-    .btn-small {
-      padding: 6px 8px;
+    .btn-danger {
+      background: rgba(240,64,64,.15);
+      color: var(--red);
+      border: 1px solid rgba(240,64,64,.35);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text3);
+      border: 1px solid transparent;
+    }
+
+    .btn-ghost:hover {
+      color: var(--text);
+      background: var(--surface2);
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
       font-size: 12px;
-      border-radius: 8px;
+      border-radius: 6px;
+    }
+
+    .btn-xs {
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 5px;
     }
 
     .layout {
-      height: calc(100vh - 72px);
+      height: calc(100vh - 68px);
       display: grid;
-      grid-template-columns: 280px 1fr;
+      grid-template-columns: 270px 1fr;
       overflow: hidden;
     }
 
     aside {
-      background: #fff;
+      background: var(--surface);
       border-right: 1px solid var(--border);
-      padding: 18px;
+      padding: 16px;
       overflow-y: auto;
-    }
-
-    main {
-      padding: 18px;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      gap: 14px;
     }
 
     .panel {
-      background: #fff;
+      background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: var(--radius);
       padding: 14px;
-      margin-bottom: 14px;
     }
 
     .panel-title {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
       text-transform: uppercase;
-      letter-spacing: .06em;
+      letter-spacing: .1em;
       margin-bottom: 12px;
     }
 
@@ -149,29 +245,36 @@
     }
 
     .metric {
-      background: #f8fafc;
+      background: var(--surface3);
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 10px;
+      border-radius: 10px;
+      padding: 12px 10px;
     }
 
     .metric strong {
       display: block;
-      font-size: 24px;
+      font-size: 26px;
+      font-family: "Playfair Display", serif;
       margin-bottom: 4px;
+      color: var(--gold2);
     }
 
     .metric span {
       font-size: 11px;
-      color: var(--muted);
+      color: var(--text3);
+    }
+
+    .field {
+      margin-bottom: 12px;
     }
 
     label {
       display: block;
       font-size: 11px;
-      font-weight: 800;
-      color: var(--muted);
+      font-weight: 600;
+      color: var(--text3);
       text-transform: uppercase;
+      letter-spacing: .06em;
       margin-bottom: 6px;
     }
 
@@ -179,21 +282,30 @@
     select,
     textarea {
       width: 100%;
+      background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: "DM Sans", sans-serif;
       outline: none;
-      font-size: 14px;
-      background: #fff;
+    }
+
+    select option {
+      background: var(--surface2);
     }
 
     textarea {
-      min-height: 90px;
+      min-height: 80px;
       resize: vertical;
     }
 
-    .field {
-      margin-bottom: 12px;
+    main {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
     .board-header {
@@ -201,17 +313,44 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 14px;
-      gap: 12px;
     }
 
     .board-title h2 {
-      font-size: 24px;
-      margin-bottom: 4px;
+      font-family: "Playfair Display", serif;
+      font-size: 26px;
+      color: var(--text);
     }
 
     .board-title p {
-      font-size: 13px;
-      color: var(--muted);
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+
+    .view-tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--surface2);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      padding: 6px 14px;
+      border-radius: 5px;
+      border: none;
+      background: transparent;
+      color: var(--text3);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: "DM Sans", sans-serif;
+    }
+
+    .tab-btn.active {
+      background: var(--gold);
+      color: #0d0f14;
     }
 
     .board {
@@ -219,15 +358,15 @@
       overflow-x: auto;
       overflow-y: hidden;
       display: grid;
-      grid-template-columns: repeat(5, minmax(270px, 1fr));
-      gap: 14px;
+      grid-template-columns: repeat(5, minmax(260px, 1fr));
+      gap: 12px;
       min-height: 0;
     }
 
     .column {
-      background: rgba(255,255,255,.75);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: var(--radius);
       display: flex;
       flex-direction: column;
       min-height: 0;
@@ -240,135 +379,162 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #fff;
     }
 
     .column-header h3 {
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
       display: flex;
       align-items: center;
       gap: 8px;
+      color: var(--text2);
     }
 
     .dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 999px;
       display: inline-block;
     }
 
     .count {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--muted);
-      background: #f8fafc;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text3);
+      background: var(--surface2);
       border: 1px solid var(--border);
-      padding: 4px 8px;
+      padding: 3px 8px;
       border-radius: 999px;
     }
 
     .dropzone {
       flex: 1;
-      min-height: 140px;
+      min-height: 120px;
       overflow-y: auto;
-      padding: 12px;
+      padding: 10px;
+      transition: background .15s;
     }
 
     .dropzone.drag-over {
-      background: rgba(37, 99, 235, .08);
+      background: rgba(201,162,39,.07);
     }
 
     .card {
-      background: #fff;
+      background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 12px;
       padding: 12px;
-      margin-bottom: 10px;
-      box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+      margin-bottom: 8px;
       cursor: grab;
+      transition: .15s;
+      position: relative;
     }
 
     .card:hover {
-      border-color: #cbd5e1;
+      border-color: var(--border2);
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
     }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      border-radius: 3px 0 0 3px;
+      background: var(--border2);
+    }
+
+    .card.prio-critico::before { background: var(--red); }
+    .card.prio-alta::before { background: var(--amber); }
+    .card.prio-media::before { background: var(--blue); }
+    .card.prio-baixa::before { background: var(--green); }
 
     .card h4 {
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 600;
       margin-bottom: 4px;
-      line-height: 1.3;
-    }
-
-    .code {
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-
-    .description {
-      font-size: 12px;
-      color: var(--muted);
       line-height: 1.4;
-      margin: 8px 0;
+    }
+
+    .card-code {
+      font-size: 10px;
+      color: var(--text3);
+      margin-bottom: 8px;
+      font-family: monospace;
     }
 
     .badges {
       display: flex;
       flex-wrap: wrap;
-      gap: 5px;
+      gap: 4px;
       margin: 8px 0;
     }
 
     .badge {
       font-size: 10px;
-      font-weight: 800;
+      font-weight: 700;
       text-transform: uppercase;
       border-radius: 999px;
-      padding: 4px 7px;
-      display: inline-block;
+      padding: 3px 7px;
+      letter-spacing: .04em;
     }
 
     .badge-demanda {
-      background: #dbeafe;
-      color: #1d4ed8;
+      background: rgba(74,128,245,.15);
+      color: #6b9eff;
     }
 
     .badge-tarefa {
-      background: #ede9fe;
-      color: #6d28d9;
+      background: rgba(155,107,255,.15);
+      color: var(--purple);
     }
 
     .badge-baixa {
-      background: #dcfce7;
-      color: #047857;
+      background: rgba(46,204,135,.15);
+      color: var(--green);
     }
 
     .badge-media {
-      background: #fef3c7;
-      color: #b45309;
+      background: rgba(74,128,245,.15);
+      color: #6b9eff;
     }
 
-    .badge-alta,
+    .badge-alta {
+      background: rgba(245,166,35,.15);
+      color: var(--amber);
+    }
+
     .badge-critico {
-      background: #fee2e2;
-      color: #b91c1c;
+      background: rgba(240,64,64,.15);
+      color: var(--red);
     }
 
-    .meta {
+    .card-desc {
       font-size: 12px;
-      color: var(--muted);
+      color: var(--text3);
+      line-height: 1.5;
+      margin: 6px 0;
+    }
+
+    .card-meta {
+      font-size: 11px;
+      color: var(--text3);
       display: grid;
-      gap: 4px;
+      gap: 3px;
       margin-top: 8px;
     }
 
     .overdue {
-      color: var(--red);
-      font-weight: 800;
+      color: var(--red) !important;
+      font-weight: 600;
     }
 
     .due-soon {
-      color: var(--amber);
-      font-weight: 800;
+      color: var(--amber) !important;
+      font-weight: 600;
     }
 
     .card-footer {
@@ -378,14 +544,35 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 8px;
+    }
+
+    .avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .resp-label {
+      font-size: 11px;
+      color: var(--text3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .empty {
       text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-      padding: 24px 8px;
+      color: var(--text3);
+      font-size: 12px;
+      padding: 32px 8px;
+      opacity: .7;
     }
 
     .modal-overlay {
@@ -395,7 +582,8 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      background: rgba(15, 23, 42, .6);
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(6px);
       z-index: 1000;
     }
 
@@ -404,13 +592,18 @@
     }
 
     .modal {
-      width: 760px;
+      width: 820px;
       max-width: 96vw;
-      max-height: 92vh;
+      max-height: 90vh;
       overflow-y: auto;
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 30px 90px rgba(15, 23, 42, .3);
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      box-shadow: 0 12px 48px rgba(0,0,0,.6);
+    }
+
+    .modal-lg {
+      width: 960px;
     }
 
     .modal-header,
@@ -434,18 +627,19 @@
     }
 
     .modal-title {
+      font-family: "Playfair Display", serif;
       font-size: 20px;
-      font-weight: 800;
     }
 
     .modal-close {
-      width: 34px;
-      height: 34px;
+      width: 32px;
+      height: 32px;
       border: none;
-      border-radius: 10px;
-      background: #f1f5f9;
+      border-radius: 8px;
+      background: var(--surface2);
+      color: var(--text3);
       cursor: pointer;
-      font-size: 20px;
+      font-size: 18px;
     }
 
     .grid-2 {
@@ -460,30 +654,118 @@
       gap: 12px;
     }
 
-    .checkline {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 8px;
+    .section-divider {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      margin-top: 4px;
+      margin-bottom: 12px;
+    }
+
+    .check-item {
+      display: flex;
       align-items: center;
-      border-bottom: 1px solid var(--border);
-      padding: 8px 0;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+
+    .check-item input[type=checkbox] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--gold);
+    }
+
+    .check-item span {
+      flex: 1;
       font-size: 13px;
+      color: var(--text2);
+    }
+
+    .check-item span.done {
+      text-decoration: line-through;
+      color: var(--text3);
+    }
+
+    .upcoming-item {
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .upcoming-title {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .upcoming-date {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .user-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .user-meta {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .info-box {
+      background: rgba(201,162,39,.07);
+      border: 1px solid rgba(201,162,39,.25);
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--text2);
+      line-height: 1.6;
     }
 
     .toast {
       position: fixed;
-      right: 18px;
-      bottom: 18px;
-      background: #111827;
-      color: #fff;
-      padding: 13px 15px;
+      right: 16px;
+      bottom: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      padding: 12px 16px;
       border-radius: 12px;
       font-size: 13px;
       transform: translateY(80px);
       opacity: 0;
       transition: .25s;
       z-index: 2000;
-      max-width: 420px;
+      max-width: 380px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 12px 48px rgba(0,0,0,.6);
     }
 
     .toast.show {
@@ -491,7 +773,7 @@
       opacity: 1;
     }
 
-    @media (max-width: 1000px) {
+    @media (max-width: 1024px) {
       body {
         overflow: auto;
       }
@@ -499,12 +781,7 @@
       header {
         height: auto;
         flex-wrap: wrap;
-        padding: 16px;
-      }
-
-      .search {
-        width: 100%;
-        max-width: none;
+        padding: 14px;
       }
 
       .layout {
@@ -516,12 +793,8 @@
         display: none;
       }
 
-      main {
-        min-height: calc(100vh - 120px);
-      }
-
       .board {
-        grid-template-columns: repeat(5, 280px);
+        grid-template-columns: repeat(5, 260px);
       }
 
       .grid-2,
@@ -535,21 +808,26 @@
 <body>
   <header>
     <div class="brand">
-      <h1>Gestão Jurídica</h1>
-      <p>Kanban de demandas, tarefas, prazos e responsáveis</p>
+      <div class="brand-icon">⚖</div>
+      <div>
+        <h1>LexBoard</h1>
+        <p>Gestão Jurídica Inteligente</p>
+      </div>
     </div>
 
-    <input
-      id="searchInput"
-      class="search"
-      placeholder="Buscar por título, processo, parte, responsável ou descrição..."
-      oninput="renderAll()"
-    />
+    <div class="search-wrap">
+      <input
+        id="searchInput"
+        class="search"
+        placeholder="Buscar por título, processo, parte, responsável..."
+        oninput="renderAll()"
+      />
+    </div>
 
     <div class="top-actions">
-      <button class="btn btn-secondary" onclick="openModal('configModal')">Config Supabase</button>
-      <button class="btn btn-secondary" onclick="openModal('responsavelModal')">+ Responsável</button>
-      <button class="btn btn-primary" onclick="newDemanda()">+ Nova demanda/tarefa</button>
+      <button class="btn btn-ghost btn-sm" onclick="openModal('configModal')">⚙ Config</button>
+      <button class="btn btn-secondary btn-sm" onclick="openModal('usersModal')">👥 Usuários</button>
+      <button class="btn btn-primary" onclick="newDemanda()">+ Nova tarefa</button>
     </div>
   </header>
 
@@ -563,15 +841,15 @@
             <span>Total</span>
           </div>
           <div class="metric">
-            <strong id="metricPrazo">0</strong>
-            <span>Vencidas/hoje</span>
+            <strong id="metricPrazo" style="color:var(--red)">0</strong>
+            <span>Vencidas</span>
           </div>
           <div class="metric">
-            <strong id="metricCritico">0</strong>
-            <span>Alto/crítico</span>
+            <strong id="metricCritico" style="color:var(--amber)">0</strong>
+            <span>Alto/Crítico</span>
           </div>
           <div class="metric">
-            <strong id="metricConcluido">0</strong>
+            <strong id="metricConcluido" style="color:var(--green)">0</strong>
             <span>Concluídas</span>
           </div>
         </div>
@@ -584,7 +862,7 @@
           <label>Tipo</label>
           <select id="filterTipo" onchange="renderAll()">
             <option value="">Todos</option>
-            <option value="demanda">Demandas jurídicas</option>
+            <option value="demanda">Demandas</option>
             <option value="tarefa">Tarefas</option>
           </select>
         </div>
@@ -622,10 +900,12 @@
           </select>
         </div>
 
-        <button class="btn btn-secondary" style="width:100%" onclick="clearFilters()">Limpar filtros</button>
+        <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="clearFilters()">
+          ✕ Limpar filtros
+        </button>
       </div>
 
-      <div class="panel">
+      <div class="panel" style="flex:1">
         <div class="panel-title">Próximos prazos</div>
         <div id="upcomingList"></div>
       </div>
@@ -634,16 +914,21 @@
     <main>
       <div class="board-header">
         <div class="board-title">
-          <h2>Quadro jurídico</h2>
-          <p>Arraste os cartões entre colunas para atualizar o status.</p>
+          <h2>Quadro Jurídico</h2>
+          <p>Arraste os cartões entre colunas para atualizar o status</p>
+        </div>
+
+        <div class="view-tabs">
+          <button class="tab-btn active" onclick="switchView('kanban', this)">⊞ Kanban</button>
+          <button class="tab-btn" onclick="switchView('lista', this)">≡ Lista</button>
         </div>
       </div>
 
-      <section class="board" id="board"></section>
+      <section id="boardKanban" class="board"></section>
+      <section id="boardLista" style="display:none;flex:1;overflow-y:auto"></section>
     </main>
   </div>
 
-  <!-- CONFIG MODAL -->
   <div class="modal-overlay" id="configModal">
     <div class="modal">
       <div class="modal-header">
@@ -652,20 +937,73 @@
       </div>
 
       <div class="modal-body">
+        <div class="info-box" style="margin-bottom:16px">
+          <strong>Instruções rápidas</strong><br>
+          Crie um projeto no Supabase, copie a URL e a chave <em>anon public</em> em
+          <em>Settings → API</em> e cole abaixo.
+        </div>
+
         <div class="field">
           <label>Supabase URL</label>
           <input id="supabaseUrl" placeholder="https://xxxxx.supabase.co" />
         </div>
 
         <div class="field">
-          <label>Supabase anon public key</label>
-          <textarea id="supabaseKey" placeholder="eyJhbGciOi..."></textarea>
+          <label>Supabase anon key</label>
+          <textarea id="supabaseKey" placeholder="eyJhbGciOi..." style="min-height:60px"></textarea>
         </div>
 
-        <p style="font-size:13px;color:var(--muted);line-height:1.5">
-          Para teste, as chaves ficam salvas no navegador via localStorage.
-          Em produção, configure autenticação e políticas RLS por usuário.
-        </p>
+        <details style="margin-top:14px">
+          <summary style="cursor:pointer;font-size:13px;color:var(--gold);font-weight:600">
+            Ver SQL para criação das tabelas
+          </summary>
+
+          <pre style="margin-top:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:11px;color:var(--text2);overflow-x:auto;white-space:pre-wrap">create extension if not exists "pgcrypto";
+
+create table if not exists jur_responsaveis (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  email text,
+  cargo text,
+  cor text default '#4a80f5',
+  alertas_email boolean default true,
+  alerta_status boolean default true,
+  alerta_prazo boolean default true,
+  alerta_atrib boolean default true,
+  created_at timestamptz default now()
+);
+
+create table if not exists jur_demandas (
+  id uuid primary key default gen_random_uuid(),
+  codigo text,
+  tipo_registro text default 'tarefa',
+  titulo text not null,
+  descricao text,
+  area_juridica text,
+  risco text default 'medio',
+  prioridade text default 'media',
+  status text default 'triagem',
+  responsavel_id uuid references jur_responsaveis(id) on delete set null,
+  prazo date,
+  numero_processo text,
+  parte_contraria text,
+  valor_envolvido numeric,
+  link_documento text,
+  checklist jsonb default '[]',
+  historico jsonb default '[]',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table jur_responsaveis enable row level security;
+alter table jur_demandas enable row level security;
+
+drop policy if exists allow_all_responsaveis on jur_responsaveis;
+create policy allow_all_responsaveis on jur_responsaveis for all using (true) with check (true);
+
+drop policy if exists allow_all_demandas on jur_demandas;
+create policy allow_all_demandas on jur_demandas for all using (true) with check (true);</pre>
+        </details>
       </div>
 
       <div class="modal-footer">
@@ -675,52 +1013,73 @@
     </div>
   </div>
 
-  <!-- RESPONSAVEL MODAL -->
-  <div class="modal-overlay" id="responsavelModal">
-    <div class="modal">
+  <div class="modal-overlay" id="usersModal">
+    <div class="modal modal-lg">
       <div class="modal-header">
-        <div class="modal-title">Responsável</div>
-        <button class="modal-close" onclick="closeModal('responsavelModal')">×</button>
+        <div class="modal-title">Usuários / Responsáveis</div>
+        <button class="modal-close" onclick="closeModal('usersModal')">×</button>
       </div>
 
       <div class="modal-body">
-        <input type="hidden" id="responsavelId" />
+        <input type="hidden" id="uId" />
 
-        <div class="grid-2">
+        <div class="grid-3">
           <div class="field">
             <label>Nome *</label>
-            <input id="responsavelNome" placeholder="Nome do responsável" />
+            <input id="uNome" placeholder="Nome completo" />
           </div>
 
           <div class="field">
             <label>E-mail</label>
-            <input id="responsavelEmail" placeholder="email@empresa.com" />
+            <input id="uEmail" type="email" placeholder="email@empresa.com" />
+          </div>
+
+          <div class="field">
+            <label>Cargo / Função</label>
+            <input id="uCargo" placeholder="Advogado, analista, gestor..." />
           </div>
         </div>
 
-        <div class="grid-2">
-          <div class="field">
-            <label>Cargo/Função</label>
-            <input id="responsavelCargo" placeholder="Advogado, analista, gestor..." />
-          </div>
-
+        <div class="grid-3">
           <div class="field">
             <label>Cor</label>
-            <input id="responsavelCor" value="#2563eb" />
+            <input id="uCor" type="color" value="#4a80f5" style="height:42px;padding:4px" />
+          </div>
+
+          <div class="field">
+            <label>Alerta status</label>
+            <select id="uAlertaStatus">
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Alerta prazo</label>
+            <select id="uAlertaPrazo">
+              <option value="true">Sim</option>
+              <option value="false">Não</option>
+            </select>
           </div>
         </div>
+
+        <div style="display:flex;gap:8px;margin-bottom:18px">
+          <button class="btn btn-primary" onclick="saveUser()">Salvar usuário</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearUserForm()">Limpar</button>
+        </div>
+
+        <div class="section-divider">Usuários cadastrados</div>
+        <div id="usersGrid"></div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeModal('responsavelModal')">Cancelar</button>
-        <button class="btn btn-primary" onclick="saveResponsavel()">Salvar</button>
+        <button class="btn btn-secondary" onclick="closeModal('usersModal')">Fechar</button>
       </div>
     </div>
   </div>
 
-  <!-- DEMANDA MODAL -->
   <div class="modal-overlay" id="demandaModal">
-    <div class="modal">
+    <div class="modal modal-lg">
       <div class="modal-header">
         <div class="modal-title" id="demandaModalTitle">Nova demanda/tarefa</div>
         <button class="modal-close" onclick="closeModal('demandaModal')">×</button>
@@ -728,6 +1087,8 @@
 
       <div class="modal-body">
         <input type="hidden" id="demandaId" />
+        <input type="hidden" id="demandaOldStatus" />
+        <input type="hidden" id="demandaOldResp" />
 
         <div class="grid-3">
           <div class="field">
@@ -762,7 +1123,7 @@
 
         <div class="field">
           <label>Título *</label>
-          <input id="titulo" placeholder="Ex: Revisar contrato / Protocolar defesa" />
+          <input id="titulo" placeholder="Ex: Revisar contrato, protocolar defesa..." />
         </div>
 
         <div class="field">
@@ -810,7 +1171,7 @@
           </div>
 
           <div class="field">
-            <label>Número do processo</label>
+            <label>Nº do processo</label>
             <input id="numeroProcesso" placeholder="0000000-00.0000.0.00.0000" />
           </div>
 
@@ -832,40 +1193,46 @@
           </div>
         </div>
 
-        <div class="field">
-          <label>Checklist de tarefas</label>
-          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px">
-            <input id="checkInput" placeholder="Ex: Revisar minuta, coletar procuração..." />
-            <button type="button" class="btn btn-primary" onclick="addChecklistItem()">Adicionar</button>
-          </div>
-          <div id="checklistBox"></div>
+        <div class="section-divider">Checklist de tarefas</div>
+
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:10px">
+          <input id="checkInput" placeholder="Adicionar item ao checklist..." onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem();}" />
+          <button type="button" class="btn btn-secondary btn-sm" onclick="addChecklistItem()">+ Adicionar</button>
         </div>
+
+        <div id="checklistBox"></div>
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-danger" id="deleteBtn" style="margin-right:auto;display:none" onclick="deleteDemanda()">Excluir</button>
+        <button class="btn btn-danger btn-sm" id="deleteBtn" style="margin-right:auto;display:none" onclick="deleteDemanda()">Excluir</button>
         <button class="btn btn-secondary" onclick="closeModal('demandaModal')">Cancelar</button>
         <button class="btn btn-primary" onclick="saveDemanda()">Salvar</button>
       </div>
     </div>
   </div>
 
-  <div class="toast" id="toast"></div>
+  <div class="toast" id="toast">
+    <span id="toastIcon">✓</span>
+    <span id="toastMsg"></span>
+  </div>
 
   <script>
     const STATUSES = [
-      { id: "triagem", label: "Triagem", color: "#64748b" },
-      { id: "em_analise", label: "Em análise", color: "#2563eb" },
-      { id: "em_execucao", label: "Em execução", color: "#d97706" },
-      { id: "aguardando", label: "Aguardando terceiro", color: "#7c3aed" },
-      { id: "concluido", label: "Concluído", color: "#059669" }
+      { id: "triagem", label: "Triagem", color: "#556080" },
+      { id: "em_analise", label: "Em análise", color: "#4a80f5" },
+      { id: "em_execucao", label: "Em execução", color: "#f5a623" },
+      { id: "aguardando", label: "Aguardando terceiro", color: "#9b6bff" },
+      { id: "concluido", label: "Concluído", color: "#2ecc87" }
     ];
+
+    const STATUS_LABEL = Object.fromEntries(STATUSES.map(s => [s.id, s.label]));
 
     let supabaseClient = null;
     let demandas = [];
     let responsaveis = [];
     let checklistAtual = [];
     let draggedId = null;
+    let currentView = "kanban";
 
     const config = {
       url: localStorage.getItem("JUR_SUPABASE_URL") || "",
@@ -875,14 +1242,14 @@
     document.addEventListener("DOMContentLoaded", init);
 
     async function init() {
-      document.getElementById("supabaseUrl").value = config.url;
-      document.getElementById("supabaseKey").value = config.key;
+      setValue("supabaseUrl", config.url);
+      setValue("supabaseKey", config.key);
 
       if (!config.url || !config.key) {
         seedDemo();
         renderAll();
         openModal("configModal");
-        toast("Configure o Supabase para salvar os dados reais.");
+        toast("Configure o Supabase para persistir dados reais.", "info");
         return;
       }
 
@@ -900,12 +1267,12 @@
       ]);
 
       if (respRes.error) {
-        toast(respRes.error.message);
+        toast(respRes.error.message, "error");
         return;
       }
 
       if (demRes.error) {
-        toast(demRes.error.message);
+        toast(demRes.error.message, "error");
         return;
       }
 
@@ -915,7 +1282,7 @@
 
     function initRealtime() {
       supabaseClient
-        .channel("juridico-kanban")
+        .channel("juridico-lexboard")
         .on("postgres_changes", { event: "*", schema: "public", table: "jur_responsaveis" }, refresh)
         .on("postgres_changes", { event: "*", schema: "public", table: "jur_demandas" }, refresh)
         .subscribe();
@@ -929,30 +1296,33 @@
     function seedDemo() {
       responsaveis = [
         {
-          id: "resp-demo-1",
+          id: "r1",
           nome: "Marina Costa",
-          email: "marina@empresa.com",
-          cargo: "Jurídico",
-          cor: "#2563eb"
+          email: "marina@escritorio.com",
+          cargo: "Advogada Senior",
+          cor: "#4a80f5",
+          alertas_email: true,
+          alerta_status: true,
+          alerta_prazo: true
         },
         {
-          id: "resp-demo-2",
+          id: "r2",
           nome: "Rafael Lima",
-          email: "rafael@empresa.com",
-          cargo: "Contratos",
-          cor: "#7c3aed"
+          email: "rafael@escritorio.com",
+          cargo: "Especialista Contratos",
+          cor: "#9b6bff",
+          alertas_email: true,
+          alerta_status: true,
+          alerta_prazo: true
         }
       ];
 
       const hoje = new Date();
-      const d1 = addDays(hoje, 2);
-      const d2 = addDays(hoje, -1);
-      const d3 = addDays(hoje, 8);
 
       demandas = [
         {
-          id: "demanda-demo-1",
-          codigo: "JUR-DEMO-001",
+          id: "d1",
+          codigo: "JUR-2026-0001",
           tipo_registro: "demanda",
           titulo: "Revisar contrato de prestação de serviços",
           descricao: "Analisar SLA, multa, reajuste, confidencialidade e rescisão.",
@@ -960,8 +1330,8 @@
           risco: "medio",
           prioridade: "alta",
           status: "em_analise",
-          responsavel_id: "resp-demo-2",
-          prazo: toISODate(d1),
+          responsavel_id: "r2",
+          prazo: toISODate(addDays(hoje, 2)),
           numero_processo: "",
           parte_contraria: "Fornecedor XPTO",
           valor_envolvido: 85000,
@@ -969,20 +1339,21 @@
           checklist: [
             { text: "Ler minuta", done: true },
             { text: "Marcar pontos de risco", done: false }
-          ]
+          ],
+          historico: []
         },
         {
-          id: "demanda-demo-2",
-          codigo: "JUR-DEMO-002",
+          id: "d2",
+          codigo: "JUR-2026-0002",
           tipo_registro: "tarefa",
           titulo: "Protocolar manifestação trabalhista",
-          descricao: "Conferir documentos e protocolar peça no sistema do tribunal.",
+          descricao: "Conferir documentos e protocolar peça no tribunal.",
           area_juridica: "trabalhista",
           risco: "alto",
           prioridade: "critico",
           status: "em_execucao",
-          responsavel_id: "resp-demo-1",
-          prazo: toISODate(d2),
+          responsavel_id: "r1",
+          prazo: toISODate(addDays(hoje, -1)),
           numero_processo: "0001234-56.2024.5.02.0001",
           parte_contraria: "Ex-colaborador",
           valor_envolvido: 42000,
@@ -990,25 +1361,27 @@
           checklist: [
             { text: "Conferir procuração", done: true },
             { text: "Protocolar peça", done: false }
-          ]
+          ],
+          historico: []
         },
         {
-          id: "demanda-demo-3",
-          codigo: "JUR-DEMO-003",
+          id: "d3",
+          codigo: "JUR-2026-0003",
           tipo_registro: "demanda",
-          titulo: "Mapear bases legais de tratamento de dados",
-          descricao: "Atividade de LGPD para atualização de inventário.",
+          titulo: "Mapear bases legais LGPD",
+          descricao: "Atualizar inventário de tratamento de dados pessoais.",
           area_juridica: "lgpd",
           risco: "baixo",
           prioridade: "media",
           status: "triagem",
           responsavel_id: "",
-          prazo: toISODate(d3),
+          prazo: toISODate(addDays(hoje, 8)),
           numero_processo: "",
           parte_contraria: "Interno",
           valor_envolvido: 0,
           link_documento: "",
-          checklist: []
+          checklist: [],
+          historico: []
         }
       ];
     }
@@ -1016,8 +1389,10 @@
     function renderAll() {
       updateResponsavelSelects();
       renderBoard();
+      renderListView();
       renderMetrics();
       renderUpcoming();
+      renderUsersGrid();
     }
 
     function getFilteredDemandas() {
@@ -1025,57 +1400,44 @@
       const tipo = getValue("filterTipo");
       const area = getValue("filterArea");
       const risco = getValue("filterRisco");
-      const responsavel = getValue("filterResponsavel");
+      const respFilt = getValue("filterResponsavel");
 
-      return demandas.filter((d) => {
+      return demandas.filter(d => {
         const resp = getResponsavel(d.responsavel_id);
-
         const text = [
           d.codigo,
           d.titulo,
           d.descricao,
           d.area_juridica,
-          d.risco,
-          d.prioridade,
           d.numero_processo,
           d.parte_contraria,
           resp?.nome,
           resp?.email
         ].join(" ").toLowerCase();
 
-        return (!search || text.includes(search)) &&
-          (!tipo || d.tipo_registro === tipo) &&
-          (!area || d.area_juridica === area) &&
-          (!risco || d.risco === risco) &&
-          (!responsavel || d.responsavel_id === responsavel);
+        return (!search || text.includes(search))
+          && (!tipo || d.tipo_registro === tipo)
+          && (!area || d.area_juridica === area)
+          && (!risco || d.risco === risco)
+          && (!respFilt || d.responsavel_id === respFilt);
       });
     }
 
     function renderBoard() {
-      const board = document.getElementById("board");
+      const board = document.getElementById("boardKanban");
       const filtered = getFilteredDemandas();
 
-      board.innerHTML = STATUSES.map((status) => {
-        const cards = filtered.filter((d) => d.status === status.id);
+      board.innerHTML = STATUSES.map(s => {
+        const cards = filtered.filter(d => d.status === s.id);
 
         return `
           <div class="column">
             <div class="column-header">
-              <h3>
-                <span class="dot" style="background:${status.color}"></span>
-                ${status.label}
-              </h3>
+              <h3><span class="dot" style="background:${s.color}"></span>${s.label}</h3>
               <span class="count">${cards.length}</span>
             </div>
-
-            <div
-              class="dropzone"
-              data-status="${status.id}"
-              ondragover="allowDrop(event)"
-              ondragleave="leaveDrop(event)"
-              ondrop="dropCard(event)"
-            >
-              ${cards.length ? cards.map(renderCard).join("") : `<div class="empty">Nenhum item nesta etapa.</div>`}
+            <div class="dropzone" data-status="${s.id}" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="dropCard(event)">
+              ${cards.length ? cards.map(renderCard).join("") : '<div class="empty">Arraste cartões aqui</div>'}
             </div>
           </div>
         `;
@@ -1084,101 +1446,254 @@
 
     function renderCard(d) {
       const resp = getResponsavel(d.responsavel_id);
-      const checklist = Array.isArray(d.checklist) ? d.checklist : [];
-      const done = checklist.filter((c) => c.done).length;
+      const cl = Array.isArray(d.checklist) ? d.checklist : [];
+      const done = cl.filter(c => c.done).length;
       const prazoClass = getPrazoClass(d.prazo);
+      const iniciais = resp ? resp.nome.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() : "?";
+      const cor = resp?.cor || "#556080";
 
       return `
-        <article class="card" draggable="true" ondragstart="dragCard(event, '${d.id}')" ondblclick="editDemanda('${d.id}')">
+        <article class="card prio-${d.prioridade}" draggable="true" ondragstart="dragCard(event,'${d.id}')" ondblclick="editDemanda('${d.id}')">
           <h4>${escapeHtml(d.titulo)}</h4>
-          <div class="code">${escapeHtml(d.codigo || d.id)}</div>
+          <div class="card-code">${escapeHtml(d.codigo || d.id)}</div>
 
           <div class="badges">
-            <span class="badge badge-${d.tipo_registro}">
-              ${d.tipo_registro === "tarefa" ? "Tarefa" : "Demanda"}
-            </span>
-
-            <span class="badge badge-${d.prioridade}">
-              ${labelPrioridade(d.prioridade)}
-            </span>
-
-            <span class="badge badge-${d.risco}">
-              Risco ${labelRisco(d.risco)}
-            </span>
+            <span class="badge badge-${d.tipo_registro}">${d.tipo_registro === "tarefa" ? "Tarefa" : "Demanda"}</span>
+            <span class="badge badge-${d.prioridade}">${labelPrioridade(d.prioridade)}</span>
+            <span class="badge badge-${d.risco}">Risco ${labelRisco(d.risco)}</span>
           </div>
 
-          <div class="description">
-            ${escapeHtml(d.descricao || "Sem descrição.")}
-          </div>
+          ${d.descricao ? `<div class="card-desc">${escapeHtml(d.descricao).slice(0, 120)}${d.descricao.length > 120 ? "…" : ""}</div>` : ""}
 
-          <div class="meta">
+          <div class="card-meta">
             <div>⚖ ${labelArea(d.area_juridica)}</div>
             <div class="${prazoClass}">⏱ ${formatDate(d.prazo) || "Sem prazo"}</div>
-            ${d.numero_processo ? `<div># ${escapeHtml(d.numero_processo)}</div>` : ""}
-            ${checklist.length ? `<div>☑ Checklist: ${done}/${checklist.length}</div>` : ""}
+            ${d.numero_processo ? `<div>📄 ${escapeHtml(d.numero_processo)}</div>` : ""}
+            ${cl.length ? `<div>☑ ${done}/${cl.length} checklist</div>` : ""}
             ${d.valor_envolvido ? `<div>💰 ${formatMoney(d.valor_envolvido)}</div>` : ""}
           </div>
 
           <div class="card-footer">
-            <div style="font-size:12px;color:var(--muted);font-weight:700">
+            <div class="resp-label">
+              <span class="avatar" style="background:${cor}">${iniciais}</span>
               ${escapeHtml(resp?.nome || "Sem responsável")}
             </div>
-
-            <button class="btn btn-secondary btn-small" onclick="event.stopPropagation(); editDemanda('${d.id}')">
-              Editar
-            </button>
+            <button class="btn btn-ghost btn-xs" onclick="event.stopPropagation();editDemanda('${d.id}')">Editar</button>
           </div>
         </article>
       `;
+    }
+
+    function renderListView() {
+      const board = document.getElementById("boardLista");
+      const filtered = getFilteredDemandas();
+
+      if (!filtered.length) {
+        board.innerHTML = '<div class="empty" style="padding:48px">Nenhum registro encontrado.</div>';
+        return;
+      }
+
+      board.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border)">
+              ${["Código","Título","Tipo","Status","Prioridade","Risco","Área","Responsável","Prazo","Valor",""].map(h =>
+                `<th style="padding:10px 12px;text-align:left;color:var(--text3);font-size:11px;text-transform:uppercase;letter-spacing:.06em">${h}</th>`
+              ).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map(d => {
+              const resp = getResponsavel(d.responsavel_id);
+              const prazoClass = getPrazoClass(d.prazo);
+              return `
+                <tr style="border-bottom:1px solid var(--border)" ondblclick="editDemanda('${d.id}')">
+                  <td style="padding:10px 12px;font-family:monospace;font-size:11px;color:var(--text3)">${escapeHtml(d.codigo || "")}</td>
+                  <td style="padding:10px 12px;font-weight:600">${escapeHtml(d.titulo)}</td>
+                  <td style="padding:10px 12px"><span class="badge badge-${d.tipo_registro}">${d.tipo_registro === "tarefa" ? "Tarefa" : "Demanda"}</span></td>
+                  <td style="padding:10px 12px;color:var(--text2)">${STATUS_LABEL[d.status] || d.status}</td>
+                  <td style="padding:10px 12px"><span class="badge badge-${d.prioridade}">${labelPrioridade(d.prioridade)}</span></td>
+                  <td style="padding:10px 12px"><span class="badge badge-${d.risco}">Risco ${labelRisco(d.risco)}</span></td>
+                  <td style="padding:10px 12px;color:var(--text2)">${labelArea(d.area_juridica)}</td>
+                  <td style="padding:10px 12px;color:var(--text2)">${escapeHtml(resp?.nome || "—")}</td>
+                  <td style="padding:10px 12px" class="${prazoClass}">${formatDate(d.prazo) || "—"}</td>
+                  <td style="padding:10px 12px;color:var(--text2)">${d.valor_envolvido ? formatMoney(d.valor_envolvido) : "—"}</td>
+                  <td style="padding:10px 12px"><button class="btn btn-ghost btn-xs" onclick="editDemanda('${d.id}')">Editar</button></td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function switchView(view, btn) {
+      currentView = view;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("boardKanban").style.display = view === "kanban" ? "" : "none";
+      document.getElementById("boardLista").style.display = view === "lista" ? "" : "none";
     }
 
     function renderMetrics() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const vencidas = demandas.filter((d) => {
+      const vencidas = demandas.filter(d => {
         if (!d.prazo || d.status === "concluido") return false;
-        const date = new Date(d.prazo + "T00:00:00");
-        return date <= today;
+        return new Date(d.prazo + "T00:00:00") <= today;
       }).length;
 
       document.getElementById("metricTotal").textContent = demandas.length;
       document.getElementById("metricPrazo").textContent = vencidas;
-      document.getElementById("metricCritico").textContent = demandas.filter((d) => ["alto", "critico"].includes(d.risco)).length;
-      document.getElementById("metricConcluido").textContent = demandas.filter((d) => d.status === "concluido").length;
+      document.getElementById("metricCritico").textContent = demandas.filter(d => ["alto", "critico"].includes(d.risco)).length;
+      document.getElementById("metricConcluido").textContent = demandas.filter(d => d.status === "concluido").length;
     }
 
     function renderUpcoming() {
       const el = document.getElementById("upcomingList");
 
-      const upcoming = demandas
-        .filter((d) => d.prazo && d.status !== "concluido")
+      const items = demandas
+        .filter(d => d.prazo && d.status !== "concluido")
         .sort((a, b) => new Date(a.prazo) - new Date(b.prazo))
-        .slice(0, 6);
+        .slice(0, 7);
 
-      if (!upcoming.length) {
-        el.innerHTML = `<div class="empty">Sem prazos cadastrados.</div>`;
+      if (!items.length) {
+        el.innerHTML = '<div class="empty">Sem prazos.</div>';
         return;
       }
 
-      el.innerHTML = upcoming.map((d) => `
-        <div style="padding:9px 0;border-bottom:1px solid var(--border)">
-          <strong style="font-size:13px">${escapeHtml(d.titulo)}</strong>
-          <div style="font-size:12px;margin-top:4px" class="${getPrazoClass(d.prazo)}">
-            ${formatDate(d.prazo)} · ${labelArea(d.area_juridica)}
-          </div>
+      el.innerHTML = items.map(d => `
+        <div class="upcoming-item" onclick="editDemanda('${d.id}')">
+          <div class="upcoming-title">${escapeHtml(d.titulo)}</div>
+          <div class="upcoming-date ${getPrazoClass(d.prazo)}">⏱ ${formatDate(d.prazo)} · ${labelArea(d.area_juridica)}</div>
         </div>
       `).join("");
     }
 
     function updateResponsavelSelects() {
-      const options = responsaveis.map((r) => `<option value="${r.id}">${escapeHtml(r.nome)}</option>`).join("");
+      const opts = responsaveis.map(r => `<option value="${r.id}">${escapeHtml(r.nome)}</option>`).join("");
 
-      document.getElementById("responsavelSelect").innerHTML =
-        `<option value="">Sem responsável</option>${options}`;
+      document.getElementById("responsavelSelect").innerHTML = `<option value="">Sem responsável</option>${opts}`;
+      document.getElementById("filterResponsavel").innerHTML = `<option value="">Todos</option>${opts}`;
+    }
 
-      document.getElementById("filterResponsavel").innerHTML =
-        `<option value="">Todos</option>${options}`;
+    function renderUsersGrid() {
+      const el = document.getElementById("usersGrid");
+
+      if (!responsaveis.length) {
+        el.innerHTML = '<div class="empty">Nenhum usuário cadastrado.</div>';
+        return;
+      }
+
+      el.innerHTML = responsaveis.map(r => {
+        const iniciais = r.nome.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+        const qtd = demandas.filter(d => d.responsavel_id === r.id).length;
+
+        return `
+          <div class="user-row">
+            <span class="avatar" style="background:${r.cor || '#4a80f5'};width:36px;height:36px;font-size:14px">${iniciais}</span>
+            <div class="user-info">
+              <div class="user-name">${escapeHtml(r.nome)}</div>
+              <div class="user-meta">${escapeHtml(r.cargo || "")}${r.email ? " · " + escapeHtml(r.email) : ""} · ${qtd} tarefa(s)</div>
+            </div>
+            <button class="btn btn-ghost btn-xs" onclick="editUser('${r.id}')">Editar</button>
+            <button class="btn btn-danger btn-xs" onclick="deleteUser('${r.id}')">✕</button>
+          </div>
+        `;
+      }).join("");
+    }
+
+    async function saveUser() {
+      const id = getValue("uId");
+
+      const payload = {
+        nome: getValue("uNome"),
+        email: getValue("uEmail"),
+        cargo: getValue("uCargo"),
+        cor: document.getElementById("uCor").value || "#4a80f5",
+        alertas_email: true,
+        alerta_status: getValue("uAlertaStatus") === "true",
+        alerta_prazo: getValue("uAlertaPrazo") === "true",
+        alerta_atrib: true
+      };
+
+      if (!payload.nome) {
+        toast("Informe o nome.", "error");
+        return;
+      }
+
+      if (!supabaseClient) {
+        if (id) {
+          const i = responsaveis.findIndex(r => r.id === id);
+          if (i >= 0) responsaveis[i] = { ...responsaveis[i], ...payload };
+        } else {
+          responsaveis.push({ id: "local-r-" + Date.now(), ...payload });
+        }
+
+        clearUserForm();
+        renderAll();
+        toast("Usuário salvo localmente.");
+        return;
+      }
+
+      let error;
+
+      if (id) {
+        ({ error } = await supabaseClient.from("jur_responsaveis").update(payload).eq("id", id));
+      } else {
+        ({ error } = await supabaseClient.from("jur_responsaveis").insert(payload));
+      }
+
+      if (error) {
+        toast(error.message, "error");
+        return;
+      }
+
+      clearUserForm();
+      await refresh();
+      toast("Usuário salvo.");
+    }
+
+    function editUser(id) {
+      const r = responsaveis.find(x => x.id === id);
+      if (!r) return;
+
+      setValue("uId", r.id);
+      setValue("uNome", r.nome);
+      setValue("uEmail", r.email || "");
+      setValue("uCargo", r.cargo || "");
+      document.getElementById("uCor").value = r.cor || "#4a80f5";
+      setValue("uAlertaStatus", String(r.alerta_status !== false));
+      setValue("uAlertaPrazo", String(r.alerta_prazo !== false));
+    }
+
+    async function deleteUser(id) {
+      if (!confirm("Excluir este usuário?")) return;
+
+      if (!supabaseClient) {
+        responsaveis = responsaveis.filter(r => r.id !== id);
+        renderAll();
+        toast("Usuário excluído.");
+        return;
+      }
+
+      const { error } = await supabaseClient.from("jur_responsaveis").delete().eq("id", id);
+
+      if (error) {
+        toast(error.message, "error");
+        return;
+      }
+
+      await refresh();
+      toast("Usuário excluído.");
+    }
+
+    function clearUserForm() {
+      ["uId", "uNome", "uEmail", "uCargo"].forEach(id => setValue(id, ""));
+      document.getElementById("uCor").value = "#4a80f5";
+      setValue("uAlertaStatus", "true");
+      setValue("uAlertaPrazo", "true");
     }
 
     function newDemanda() {
@@ -1189,15 +1704,17 @@
     }
 
     function editDemanda(id) {
-      const d = demandas.find((x) => x.id === id);
+      const d = demandas.find(x => x.id === id);
       if (!d) return;
 
       setValue("demandaId", d.id);
+      setValue("demandaOldStatus", d.status);
+      setValue("demandaOldResp", d.responsavel_id || "");
       setValue("tipoRegistro", d.tipo_registro);
       setValue("status", d.status);
       setValue("prioridade", d.prioridade);
       setValue("titulo", d.titulo);
-      setValue("descricao", d.descricao);
+      setValue("descricao", d.descricao || "");
       setValue("areaJuridica", d.area_juridica);
       setValue("risco", d.risco);
       setValue("responsavelSelect", d.responsavel_id || "");
@@ -1209,25 +1726,29 @@
 
       checklistAtual = Array.isArray(d.checklist) ? [...d.checklist] : [];
 
+      renderChecklist();
+
       document.getElementById("demandaModalTitle").textContent = "Editar demanda/tarefa";
       document.getElementById("deleteBtn").style.display = "inline-flex";
-
-      renderChecklist();
       openModal("demandaModal");
     }
 
     async function saveDemanda() {
       const id = getValue("demandaId");
+      const oldStatus = getValue("demandaOldStatus");
+      const oldResp = getValue("demandaOldResp");
+      const newStatus = getValue("status");
+      const newResp = getValue("responsavelSelect");
 
       const payload = {
         tipo_registro: getValue("tipoRegistro"),
-        status: getValue("status"),
+        status: newStatus,
         prioridade: getValue("prioridade"),
         titulo: getValue("titulo"),
         descricao: getValue("descricao"),
         area_juridica: getValue("areaJuridica"),
         risco: getValue("risco"),
-        responsavel_id: getValue("responsavelSelect") || null,
+        responsavel_id: newResp || null,
         prazo: getValue("prazo") || null,
         numero_processo: getValue("numeroProcesso"),
         parte_contraria: getValue("parteContraria"),
@@ -1237,47 +1758,75 @@
       };
 
       if (!payload.titulo) {
-        toast("Informe o título.");
+        toast("Informe o título.", "error");
         return;
+      }
+
+      const histEntries = [];
+
+      if (id && oldStatus && oldStatus !== newStatus) {
+        histEntries.push({
+          msg: `Status alterado: ${STATUS_LABEL[oldStatus] || oldStatus} → ${STATUS_LABEL[newStatus] || newStatus}`,
+          data: new Date().toISOString()
+        });
+      }
+
+      if (id && oldResp !== newResp) {
+        const nr = getResponsavel(newResp);
+        histEntries.push({
+          msg: `Responsável alterado para: ${nr?.nome || "nenhum"}`,
+          data: new Date().toISOString()
+        });
       }
 
       if (!supabaseClient) {
         if (id) {
-          const index = demandas.findIndex((d) => d.id === id);
-          demandas[index] = { ...demandas[index], ...payload };
+          const i = demandas.findIndex(d => d.id === id);
+          const prev = demandas[i];
+          const hist = [...(Array.isArray(prev.historico) ? prev.historico : []), ...histEntries];
+
+          demandas[i] = {
+            ...prev,
+            ...payload,
+            historico: hist,
+            updated_at: new Date().toISOString()
+          };
         } else {
           demandas.unshift({
             id: "local-" + Date.now(),
             codigo: nextLocalCode(),
-            ...payload
+            ...payload,
+            historico: [{ msg: "Criado", data: new Date().toISOString() }]
           });
         }
 
         closeModal("demandaModal");
         renderAll();
-        toast("Salvo localmente. Configure o Supabase para persistir.");
+        toast("Salvo localmente.");
         return;
       }
 
       if (id) {
-        const { error } = await supabaseClient
-          .from("jur_demandas")
-          .update(payload)
-          .eq("id", id);
+        const cur = demandas.find(d => d.id === id);
+        const hist = [...(Array.isArray(cur?.historico) ? cur.historico : []), ...histEntries];
+
+        payload.historico = hist;
+        payload.updated_at = new Date().toISOString();
+
+        const { error } = await supabaseClient.from("jur_demandas").update(payload).eq("id", id);
 
         if (error) {
-          toast(error.message);
+          toast(error.message, "error");
           return;
         }
       } else {
         payload.codigo = await nextCode();
+        payload.historico = [{ msg: "Criado", data: new Date().toISOString() }];
 
-        const { error } = await supabaseClient
-          .from("jur_demandas")
-          .insert(payload);
+        const { error } = await supabaseClient.from("jur_demandas").insert(payload);
 
         if (error) {
-          toast(error.message);
+          toast(error.message, "error");
           return;
         }
       }
@@ -1290,114 +1839,27 @@
 
     async function deleteDemanda() {
       const id = getValue("demandaId");
-      if (!id) return;
 
-      if (!confirm("Deseja excluir este registro?")) return;
+      if (!id || !confirm("Excluir este registro permanentemente?")) return;
 
       if (!supabaseClient) {
-        demandas = demandas.filter((d) => d.id !== id);
+        demandas = demandas.filter(d => d.id !== id);
         closeModal("demandaModal");
         renderAll();
-        toast("Registro excluído localmente.");
+        toast("Excluído localmente.");
         return;
       }
 
-      const { error } = await supabaseClient
-        .from("jur_demandas")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabaseClient.from("jur_demandas").delete().eq("id", id);
 
       if (error) {
-        toast(error.message);
+        toast(error.message, "error");
         return;
       }
 
       closeModal("demandaModal");
       await refresh();
       toast("Registro excluído.");
-    }
-
-    async function saveResponsavel() {
-      const payload = {
-        nome: getValue("responsavelNome"),
-        email: getValue("responsavelEmail"),
-        cargo: getValue("responsavelCargo"),
-        cor: getValue("responsavelCor") || "#2563eb"
-      };
-
-      if (!payload.nome) {
-        toast("Informe o nome do responsável.");
-        return;
-      }
-
-      if (!supabaseClient) {
-        responsaveis.push({
-          id: "local-resp-" + Date.now(),
-          ...payload
-        });
-
-        closeModal("responsavelModal");
-        clearResponsavelForm();
-        renderAll();
-        toast("Responsável salvo localmente.");
-        return;
-      }
-
-      const { error } = await supabaseClient
-        .from("jur_responsaveis")
-        .insert(payload);
-
-      if (error) {
-        toast(error.message);
-        return;
-      }
-
-      closeModal("responsavelModal");
-      clearResponsavelForm();
-      await refresh();
-      toast("Responsável salvo.");
-    }
-
-    function addChecklistItem() {
-      const text = getValue("checkInput");
-      if (!text) return;
-
-      checklistAtual.push({
-        text,
-        done: false
-      });
-
-      setValue("checkInput", "");
-      renderChecklist();
-    }
-
-    function toggleChecklist(index) {
-      checklistAtual[index].done = !checklistAtual[index].done;
-      renderChecklist();
-    }
-
-    function removeChecklist(index) {
-      checklistAtual.splice(index, 1);
-      renderChecklist();
-    }
-
-    function renderChecklist() {
-      const box = document.getElementById("checklistBox");
-
-      if (!checklistAtual.length) {
-        box.innerHTML = `<div class="empty">Nenhuma tarefa no checklist.</div>`;
-        return;
-      }
-
-      box.innerHTML = checklistAtual.map((item, index) => `
-        <div class="checkline">
-          <input type="checkbox" ${item.done ? "checked" : ""} onchange="toggleChecklist(${index})" />
-          <span style="${item.done ? "text-decoration:line-through;color:var(--muted)" : ""}">
-            ${escapeHtml(item.text)}
-          </span>
-          <button class="btn btn-danger btn-small" type="button" onclick="removeChecklist(${index})">x</button>
-        </div>
-      `).join("");
     }
 
     function dragCard(event, id) {
@@ -1418,28 +1880,89 @@
       event.preventDefault();
       event.currentTarget.classList.remove("drag-over");
 
-      const status = event.currentTarget.dataset.status;
-      if (!draggedId || !status) return;
+      const newStatus = event.currentTarget.dataset.status;
+
+      if (!draggedId || !newStatus) return;
+
+      const item = demandas.find(d => d.id === draggedId);
+      if (!item) return;
+
+      const oldStatus = item.status;
+
+      if (oldStatus === newStatus) return;
+
+      const histEntry = {
+        msg: `Status alterado: ${STATUS_LABEL[oldStatus]} → ${STATUS_LABEL[newStatus]}`,
+        data: new Date().toISOString()
+      };
+
+      const newHist = [...(Array.isArray(item.historico) ? item.historico : []), histEntry];
 
       if (!supabaseClient) {
-        const item = demandas.find((d) => d.id === draggedId);
-        if (item) item.status = status;
+        item.status = newStatus;
+        item.historico = newHist;
         renderAll();
+        toast(`Status → ${STATUS_LABEL[newStatus]}`);
         return;
       }
 
       const { error } = await supabaseClient
         .from("jur_demandas")
-        .update({ status })
+        .update({
+          status: newStatus,
+          historico: newHist,
+          updated_at: new Date().toISOString()
+        })
         .eq("id", draggedId);
 
       if (error) {
-        toast(error.message);
+        toast(error.message, "error");
         return;
       }
 
       await refresh();
-      toast("Status atualizado.");
+      toast(`Status → ${STATUS_LABEL[newStatus]}`);
+    }
+
+    function addChecklistItem() {
+      const text = getValue("checkInput");
+
+      if (!text) return;
+
+      checklistAtual.push({
+        text,
+        done: false
+      });
+
+      setValue("checkInput", "");
+      renderChecklist();
+    }
+
+    function toggleChecklist(i) {
+      checklistAtual[i].done = !checklistAtual[i].done;
+      renderChecklist();
+    }
+
+    function removeChecklist(i) {
+      checklistAtual.splice(i, 1);
+      renderChecklist();
+    }
+
+    function renderChecklist() {
+      const box = document.getElementById("checklistBox");
+
+      if (!checklistAtual.length) {
+        box.innerHTML = '<div class="empty" style="padding:16px">Nenhum item no checklist.</div>';
+        return;
+      }
+
+      box.innerHTML = checklistAtual.map((item, i) => `
+        <div class="check-item">
+          <input type="checkbox" ${item.done ? "checked" : ""} onchange="toggleChecklist(${i})" />
+          <span class="${item.done ? "done" : ""}">${escapeHtml(item.text)}</span>
+          <button type="button" class="btn btn-danger btn-xs" onclick="removeChecklist(${i})">✕</button>
+        </div>
+      `).join("");
     }
 
     function saveConfig() {
@@ -1449,17 +1972,15 @@
     }
 
     function clearFilters() {
-      setValue("searchInput", "");
-      setValue("filterTipo", "");
-      setValue("filterArea", "");
-      setValue("filterRisco", "");
-      setValue("filterResponsavel", "");
+      ["searchInput", "filterTipo", "filterArea", "filterRisco", "filterResponsavel"].forEach(id => setValue(id, ""));
       renderAll();
     }
 
     function clearDemandaForm() {
       [
         "demandaId",
+        "demandaOldStatus",
+        "demandaOldResp",
         "titulo",
         "descricao",
         "prazo",
@@ -1468,7 +1989,7 @@
         "parteContraria",
         "linkDocumento",
         "checkInput"
-      ].forEach((id) => setValue(id, ""));
+      ].forEach(id => setValue(id, ""));
 
       setValue("tipoRegistro", "demanda");
       setValue("status", "triagem");
@@ -1481,14 +2002,6 @@
       renderChecklist();
     }
 
-    function clearResponsavelForm() {
-      setValue("responsavelId", "");
-      setValue("responsavelNome", "");
-      setValue("responsavelEmail", "");
-      setValue("responsavelCargo", "");
-      setValue("responsavelCor", "#2563eb");
-    }
-
     function openModal(id) {
       document.getElementById(id).classList.add("active");
     }
@@ -1497,25 +2010,24 @@
       document.getElementById(id).classList.remove("active");
     }
 
-    document.querySelectorAll(".modal-overlay").forEach((modal) => {
-      modal.addEventListener("click", (event) => {
-        if (event.target === modal) modal.classList.remove("active");
+    document.querySelectorAll(".modal-overlay").forEach(modal => {
+      modal.addEventListener("click", e => {
+        if (e.target === modal) modal.classList.remove("active");
       });
     });
 
     async function nextCode() {
       const year = new Date().getFullYear();
-      const count = demandas.filter((d) => String(d.codigo || "").includes(`JUR-${year}`)).length + 1;
+      const count = demandas.filter(d => String(d.codigo || "").includes(`JUR-${year}`)).length + 1;
       return `JUR-${year}-${String(count).padStart(4, "0")}`;
     }
 
     function nextLocalCode() {
-      const year = new Date().getFullYear();
-      return `JUR-${year}-${String(demandas.length + 1).padStart(4, "0")}`;
+      return `JUR-${new Date().getFullYear()}-${String(demandas.length + 1).padStart(4, "0")}`;
     }
 
     function getResponsavel(id) {
-      return responsaveis.find((r) => r.id === id);
+      return responsaveis.find(r => r.id === id);
     }
 
     function getPrazoClass(date) {
@@ -1524,53 +2036,60 @@
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const prazo = new Date(date + "T00:00:00");
-      const diff = Math.ceil((prazo - today) / 86400000);
+      const diff = Math.ceil((new Date(date + "T00:00:00") - today) / 86400000);
 
       if (diff < 0) return "overdue";
       if (diff <= 2) return "due-soon";
+
       return "";
     }
 
-    function labelArea(value) {
-      return {
-        contratos: "Contratos",
-        trabalhista: "Trabalhista",
-        civel: "Cível",
-        tributario: "Tributário",
-        societario: "Societário",
-        compliance: "Compliance",
-        lgpd: "LGPD",
-        administrativo: "Administrativo"
-      }[value] || value || "—";
+    const AREA_MAP = {
+      contratos: "Contratos",
+      trabalhista: "Trabalhista",
+      civel: "Cível",
+      tributario: "Tributário",
+      societario: "Societário",
+      compliance: "Compliance",
+      lgpd: "LGPD",
+      administrativo: "Administrativo"
+    };
+
+    const PRIO_MAP = {
+      baixa: "Baixa",
+      media: "Média",
+      alta: "Alta",
+      critico: "Crítica"
+    };
+
+    const RISCO_MAP = {
+      baixo: "Baixo",
+      medio: "Médio",
+      alto: "Alto",
+      critico: "Crítico"
+    };
+
+    function labelArea(v) {
+      return AREA_MAP[v] || v || "—";
     }
 
-    function labelPrioridade(value) {
-      return {
-        baixa: "Baixa",
-        media: "Média",
-        alta: "Alta",
-        critico: "Crítica"
-      }[value] || value || "—";
+    function labelPrioridade(v) {
+      return PRIO_MAP[v] || v || "—";
     }
 
-    function labelRisco(value) {
-      return {
-        baixo: "Baixo",
-        medio: "Médio",
-        alto: "Alto",
-        critico: "Crítico"
-      }[value] || value || "—";
+    function labelRisco(v) {
+      return RISCO_MAP[v] || v || "—";
     }
 
     function formatDate(date) {
       if (!date) return "";
-      const [year, month, day] = date.split("-");
-      return `${day}/${month}/${year}`;
+
+      const [y, m, d] = date.split("-");
+      return `${d}/${m}/${y}`;
     }
 
-    function formatMoney(value) {
-      return Number(value || 0).toLocaleString("pt-BR", {
+    function formatMoney(v) {
+      return Number(v || 0).toLocaleString("pt-BR", {
         style: "currency",
         currency: "BRL"
       });
@@ -1590,26 +2109,32 @@
       return document.getElementById(id)?.value?.trim() || "";
     }
 
-    function setValue(id, value) {
+    function setValue(id, v) {
       const el = document.getElementById(id);
-      if (el) el.value = value ?? "";
+      if (el) el.value = v ?? "";
     }
 
-    function escapeHtml(value) {
-      return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    function escapeHtml(v) {
+      return String(v ?? "").replace(/[&<>"']/g, c => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
         "'": "&#039;"
-      }[char]));
+      }[c]));
     }
 
-    function toast(message) {
+    function toast(msg, type = "success") {
       const el = document.getElementById("toast");
-      el.textContent = message;
+      const icon = document.getElementById("toastIcon");
+
+      el.style.borderColor = type === "error" ? "var(--red)" : type === "info" ? "var(--blue)" : "var(--green)";
+      icon.textContent = type === "error" ? "✗" : type === "info" ? "ℹ" : "✓";
+
+      document.getElementById("toastMsg").textContent = msg;
+
       el.classList.add("show");
-      setTimeout(() => el.classList.remove("show"), 3200);
+      setTimeout(() => el.classList.remove("show"), 3500);
     }
   </script>
 </body>
